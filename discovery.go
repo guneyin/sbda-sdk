@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
-	"log"
 )
 
 type IService interface {
@@ -44,10 +43,11 @@ func (ds *DiscoveryService) GetServiceInfo(serviceName string) (*ServiceInfo, er
 }
 
 func (ds *DiscoveryService) RegisterService(svc IService) error {
-	config := consulapi.DefaultConfig()
+	config := &consulapi.Config{Address: ds.addr}
+
 	consul, err := consulapi.NewClient(config)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	si := svc.ServiceInfo()
@@ -70,7 +70,7 @@ func (ds *DiscoveryService) RegisterService(svc IService) error {
 		return fmt.Errorf("failed to register service: %s - %s", si.Name, err.Error())
 	}
 
-	fmt.Printf("successfully register service: %s", si.Name)
+	fmt.Printf("successfully register service: %s - %s", si.Name, config.Address)
 
 	return nil
 }
