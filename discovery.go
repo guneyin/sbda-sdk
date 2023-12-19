@@ -64,10 +64,10 @@ func (ds *DiscoveryService) RegisterService(svc IService) error {
 		},
 	}
 
-	regiErr := consul.Agent().ServiceRegister(registration)
+	err = consul.Agent().ServiceRegister(registration)
 
-	if regiErr != nil {
-		return fmt.Errorf("failed to register service: %s", si.Name)
+	if err != nil {
+		return fmt.Errorf("failed to register service: %s - %s", si.Name, err.Error())
 	}
 
 	fmt.Printf("successfully register service: %s", si.Name)
