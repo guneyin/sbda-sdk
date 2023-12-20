@@ -58,10 +58,17 @@ func (ds *DiscoveryService) RegisterService(svc IService) error {
 		Port:    si.Port,
 		Address: si.IP,
 		Check: &consulapi.AgentServiceCheck{
-			HTTP:     fmt.Sprintf("http://%s/check", si.Address()),
 			Interval: "10s",
 			Timeout:  "30s",
 		},
+	}
+
+	switch si.Protocol {
+	case ServiceProtocolHttp:
+		registration.Check.HTTP = fmt.Sprintf("%s/%s", si.Address(), si.CheckAddr)
+	case ServiceProtocolGrpc:
+		registration.Check.GRPC = fmt.Sprintf("%s", si.Address())
+	default:
 	}
 
 	err = consul.Agent().ServiceRegister(registration)
