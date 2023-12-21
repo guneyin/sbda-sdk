@@ -13,29 +13,45 @@ type IService interface {
 }
 
 type DiscoveryService struct {
-	addr string
+	consul *consulapi.Client
 }
 
-func NewDiscoveryService(addr string) *DiscoveryService {
-	return &DiscoveryService{addr: addr}
+func NewDiscoveryService(addr string) (*DiscoveryService, error) {
+	consul, err := consulapi.NewClient(&consulapi.Config{Address: addr})
+	if err != nil {
+		return nil, err
+	}
+
+	return &DiscoveryService{consul: consul}, nil
 }
 
 func (ds *DiscoveryService) GetServiceInfo(serviceName string) (*ServiceInfo, error) {
-	consul, err := consulapi.NewClient(&consulapi.Config{Address: ds.addr})
+	services, err := ds.consul.Agent().Services()
 	if err != nil {
 		return nil, err
 	}
 
-	services, err := consul.Agent().Services()
-	if err != nil {
-		return nil, err
+	ch, _ := ds.consul.Agent().Checks()
+	for _, check := range ch {
+		fmt.Println(check)
 	}
 
 	if service, ok := services[serviceName]; ok {
+		addrs, _, err := ds.consul.Health().Service(serviceName, "", true, nil)
+		if len(addrs) == 0 && err == nil {
+			return nil, fmt.Errorf("service ( %s ) was not found", service.Service)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		svc := addrs[0].Service
+
 		return &ServiceInfo{
-			Name: serviceName,
-			IP:   service.Address,
-			Port: service.Port,
+			ID:   svc.ID,
+			Name: svc.Service,
+			IP:   svc.Address,
+			Port: svc.Port,
 		}, nil
 	}
 
@@ -43,13 +59,6 @@ func (ds *DiscoveryService) GetServiceInfo(serviceName string) (*ServiceInfo, er
 }
 
 func (ds *DiscoveryService) RegisterService(svc IService) error {
-	config := &consulapi.Config{Address: ds.addr}
-
-	consul, err := consulapi.NewClient(config)
-	if err != nil {
-		return err
-	}
-
 	si := svc.ServiceInfo()
 
 	registration := &consulapi.AgentServiceRegistration{
@@ -71,13 +80,16 @@ func (ds *DiscoveryService) RegisterService(svc IService) error {
 	default:
 	}
 
-	err = consul.Agent().ServiceRegister(registration)
-
+	err := ds.consul.Agent().ServiceRegister(registration)
 	if err != nil {
 		return fmt.Errorf("failed to register service: %s - %s", si.Name, err.Error())
 	}
 
-	fmt.Printf("successfully register service: %s - %s", si.Name, config.Address)
+	fmt.Printf("successfully register service: %s - %s", si.Name, si.Address())
 
 	return nil
+}
+
+func (ds *DiscoveryService) DeRegisterService(svc IService) error {
+	return ds.consul.Agent().ServiceDeregister(svc.ServiceInfo().ID)
 }

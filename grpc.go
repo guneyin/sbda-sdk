@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	auth "github.com/guneyin/sbda-proto/auth"
+	proto "github.com/guneyin/sbda-sdk/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -10,7 +10,7 @@ func dialService(info *ServiceInfo) (*grpc.ClientConn, error) {
 	return grpc.Dial(info.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
-func (ds *DiscoveryService) GetAuthService() (auth.AuthServiceClient, error) {
+func (ds *DiscoveryService) GetAuthService() (proto.AuthServiceClient, error) {
 	serviceInfo, err := ds.GetServiceInfo(AuthServiceName.String())
 	if err != nil {
 		return nil, err
@@ -20,6 +20,7 @@ func (ds *DiscoveryService) GetAuthService() (auth.AuthServiceClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
-	return auth.NewAuthServiceClient(conn), nil
+	return proto.NewAuthServiceClient(conn), nil
 }

@@ -24,6 +24,7 @@ func (sn ServiceName) String() string {
 }
 
 type ServiceInfo struct {
+	ID        string
 	Name      string
 	IP        string
 	Port      int
