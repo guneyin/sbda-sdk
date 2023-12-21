@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-type ServiceName string
+type ServiceEnum string
 
 const (
-	ConsulServiceName ServiceName = "consul-service"
-	AuthServiceName   ServiceName = "auth-service"
-	ApilServiceName   ServiceName = "api-service"
+	ConsulService ServiceEnum = "consul-service"
+	AuthService   ServiceEnum = "auth-service"
+	ApiService    ServiceEnum = "api-service"
 )
 
 type ServiceProtocol int
@@ -19,8 +19,8 @@ const (
 	ServiceProtocolGrpc
 )
 
-func (sn ServiceName) String() string {
-	return string(sn)
+func (s ServiceEnum) String() string {
+	return string(s)
 }
 
 type ServiceInfo struct {
