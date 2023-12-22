@@ -7,9 +7,8 @@ import (
 type ServiceEnum string
 
 const (
-	ConsulService ServiceEnum = "consul-service"
-	AuthService   ServiceEnum = "auth-service"
-	ApiService    ServiceEnum = "api-service"
+	AuthService            ServiceEnum = "auth-service"
+	ProductCategoryService ServiceEnum = "product-category-service"
 )
 
 type ServiceProtocol int
